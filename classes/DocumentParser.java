@@ -50,9 +50,6 @@ public class DocumentParser {
         vocabulary = (String[]) allTerms.toArray(vocabulary);               
     }
 
-    /**
-     * Method to create termVector according to its tfidf score.
-     */
     @SuppressWarnings("unchecked")
 	public void tfIdfCalculator() {
         Double tf; //term frequency
@@ -75,10 +72,7 @@ public class DocumentParser {
         }        
         tfidfDocumentVector = (Double[][]) tfidfDocsVector.toArray(new Double[tfidfDocsVector.size()][tfidfvector.length]);        
     }
-
-    /**
-     * Method to calculate cosine similarity between all the documents.
-     */
+    
     public void getCosineSimilarity() {    	
         for (int i = 0; i < tfidfDocsVector.size(); i++) {
             for (int j = i+1; j < tfidfDocsVector.size(); j++) {            	

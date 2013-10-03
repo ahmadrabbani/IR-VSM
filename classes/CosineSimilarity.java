@@ -1,22 +1,7 @@
-//CosineSimilarity.java
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package classes;
 
-/**
- * Cosine similarity calculator class
- * @author Mubin Shrestha
- */
 public class CosineSimilarity {
-
-    /**
-     * Method to calculate cosine similarity between two documents.
-     * @param docVector1 : document vector 1 (a)
-     * @param docVector2 : document vector 2 (b)
-     * @return 
-     */
+   
     public static double cosineSimilarity(Double[] docVector1, Double[] docVector2) {
         double dotProduct = 0.0;
         double magnitude1 = 0.0;

@@ -2,8 +2,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import classes.*;
 
-public class Main {
-    
+public class Main {    
     /**
      * Main method
      * @param args

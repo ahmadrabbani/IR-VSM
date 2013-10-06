@@ -25,27 +25,20 @@ public class DocumentParser {
     private Object arrayOfTermDocumentVectors[];
     private String vocabulary[];
     private Double tfidfDocumentVector[][];
+    
+    private String queryVector[];
         
     public void parseFiles(String filePath, String lang) throws FileNotFoundException, IOException {
         File[] allfiles = new File(filePath).listFiles();
         lang = lang.toLowerCase();
         BufferedReader in = null;
+        String[] tokenizedTerms;
         for (File f : allfiles) {
             if (f.getName().endsWith(".txt")) {
+            	
                 in = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
-                StringBuilder sb = new StringBuilder();
-                String s = null;
-                while ((s = in.readLine()) != null) {
-                    sb.append(s);
-//                	System.out.println(sb);
-                }
-                String[] tokenizedTerms;
-                if(lang == ENGLISH){                	
-                	tokenizedTerms = sb.toString().replaceAll("[\\W&&[^\\s]]+", "").split("\\W+");   //to get individual terms
-                }
-                else{
-                	tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\?p\\[\\]\\(\\)\\-]","").split("\\s+");   //to get individual terms
-                }              
+                
+                tokenizedTerms = tokenize(in,lang); //Builds a vector for the document by tokenizing it's words.     
                 
                 for (String term:tokenizedTerms) {
                     if (!allTerms.contains(term)) {  //avoid duplicate entry
@@ -54,44 +47,84 @@ public class DocumentParser {
                 }
                 termsDocsArray.add(tokenizedTerms);
             }
-        }
+        }                
         
-//        termsInDocument = new String [termsDocsArray.size()];
-        arrayOfTermDocumentVectors =  termsDocsArray.toArray(new Object[termsDocsArray.size()]);
-        
-        
+        arrayOfTermDocumentVectors =  termsDocsArray.toArray(new Object[termsDocsArray.size()]);                
         vocabulary = new String [allTerms.size()];
         vocabulary = (String[]) allTerms.toArray(vocabulary);               
     }
 
-    @SuppressWarnings("unchecked")
-	public void tfIdfCalculator() {
-        Double tf; //term frequency
-        Double idf; //inverse document frequency
-        Double tfidf; //term frequency inverse document frequency 
+    public String[] tokenize(BufferedReader in, String lang) throws IOException {
+    	 StringBuilder sb = new StringBuilder();
+         String s = null;
+         while ((s = in.readLine()) != null) {
+             sb.append(s);
+         }
+    	String[] tokenizedTerms;
+    	if(lang == ENGLISH){                	
+        	tokenizedTerms = sb.toString().replaceAll("[\\W&&[^\\s]]+", "").split("\\W+");   //to get individual terms
+        }
+        else{
+        	tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\?p\\[\\]\\(\\)\\-]","").split("\\s+");   //to get individual terms
+        }      
+		return tokenizedTerms;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void buildTFIDForCorpus() {        
         Double[] tfidfvector = new Double[allTerms.size()];
         String[] unfilteredTDStringArray;
         for (Object unfilteredTermDocumentVector:arrayOfTermDocumentVectors) {
             tfidfvector = new Double[allTerms.size()];
             unfilteredTDStringArray = (String[]) unfilteredTermDocumentVector;
-            int count = 0;
-            for (String term:vocabulary){
-                tf = TfIdf.tfCalculator(unfilteredTDStringArray, term);
-                idf = TfIdf.idfCalculator(arrayOfTermDocumentVectors, term);
-                tfidf = tf * idf;
-                tfidfvector[count] = tfidf;
-                count++;
-            }
+            tfidfvector = getTFIDFVector(unfilteredTDStringArray);
             tfidfDocsVector.add(tfidfvector);  //storing document vectors;            
         }        
         tfidfDocumentVector = (Double[][]) tfidfDocsVector.toArray(new Double[tfidfDocsVector.size()][tfidfvector.length]);        
     }
+
+	private Double[] getTFIDFVector(String[] unfilteredTDStringArray) {
+		Double tf; //term frequency
+        Double idf; //inverse document frequency
+        Double tfidf; //term frequency inverse document frequency 
+		Double[] tfidfvector = new Double[allTerms.size()];
+		int count = 0;
+		for (String term:vocabulary){
+		    tf = TfIdf.tfCalculator(unfilteredTDStringArray, term);
+		    idf = TfIdf.idfCalculator(arrayOfTermDocumentVectors, term);
+		    tfidf = tf * idf;
+		    tfidfvector[count] = tfidf;
+		    count++;
+		}
+		return tfidfvector;
+	}
     
-    public void getCosineSimilarity() {    	
-        for (int i = 0; i < tfidfDocsVector.size(); i++) {
-            for (int j = i+1; j < tfidfDocsVector.size(); j++) {            	
-            	System.out.println("between " + i + " and " + j + "  =  "+ CosineSimilarity.cosineSimilarity(tfidfDocumentVector[i],tfidfDocumentVector[j]));            		
-            }         
-        }
+    public void getCosineSimilarity(Double tfidfQueryVectors[][]) {
+    	for(int i = 0; i<tfidfQueryVectors.length; i ++){
+		    for (int j = 0; j < tfidfDocsVector.size(); j++) {            	
+		    	System.out.println("between query and " + j + "  =  "+ CosineSimilarity.cosineSimilarity(tfidfQueryVectors[i],tfidfDocumentVector[j]));            		
+		    }             
+    	}
     }
+
+	public Double[][] parseQuery(String queryPath, String lang) throws IOException {
+		File[] allfiles = new File(queryPath).listFiles();    //List all queries    
+        BufferedReader in = null;
+        String[] tokenizedTerms;
+        Double[] tfidfQueryVector = null;
+        Double[][] tfidfQueryVectors = null;        
+        List<Double[]> tfidfQVectors = new ArrayList<Double[]>();
+        for (File f : allfiles) {
+            if (f.getName().endsWith(".txt")) {            	
+                in = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
+                tokenizedTerms = tokenize(in,lang); //Builds a vector for the document by tokenizing it's words.
+                queryVector = tokenizedTerms;
+                tfidfQueryVector = getTFIDFVector(queryVector);
+                tfidfQVectors.add(tfidfQueryVector);
+            }
+        }        	
+		tfidfQueryVectors = (Double[][]) tfidfQVectors.toArray(new Double[tfidfQVectors.size()][vocabulary.length]);
+		return tfidfQueryVectors;
+	}
 }
+        

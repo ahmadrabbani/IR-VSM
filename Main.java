@@ -12,7 +12,8 @@ public class Main {
     public static void main(String args[]) throws FileNotFoundException, IOException
     {
         DocumentParser dp = new DocumentParser();
-        dp.parseFiles("dataset");//location of your source files, only text file
+        dp.parseFiles("dataset-hindi","hindi");//location of your source files, only text file
+//        dp.parseFiles("dataset","english");//location of your source files, only text file        
         dp.tfIdfCalculator(); //calculates tfidf
         dp.getCosineSimilarity(); //calculated cosine similarity   
     }

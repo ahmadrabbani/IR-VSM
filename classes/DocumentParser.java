@@ -28,17 +28,15 @@ public class DocumentParser {
     
     private String queryVector[];
         
-    public void parseFiles(String filePath, String lang) throws FileNotFoundException, IOException {
+    public void parseFiles(String filePath, String lang) throws Exception {
         File[] allfiles = new File(filePath).listFiles();
         lang = lang.toLowerCase();
         BufferedReader in = null;
         String[] tokenizedTerms;
         for (File f : allfiles) {
-            if (f.getName().endsWith(".txt")) {
+            if (f.getName().endsWith(".utf8")) {
             	
-                in = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
-                
-                tokenizedTerms = tokenize(in,lang); //Builds a vector for the document by tokenizing it's words.     
+                tokenizedTerms = tokenize(f,lang);      
                 
                 for (String term:tokenizedTerms) {
                     if (!allTerms.contains(term)) {  //avoid duplicate entry
@@ -54,18 +52,22 @@ public class DocumentParser {
         vocabulary = (String[]) allTerms.toArray(vocabulary);               
     }
 
-    public String[] tokenize(BufferedReader in, String lang) throws IOException {
+    public String[] tokenize(File f, String lang) throws Exception {
+    	 BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
     	 StringBuilder sb = new StringBuilder();
          String s = null;
-         while ((s = in.readLine()) != null) {
-             sb.append(s);
-         }
+         s = TagParser.parse("dataset\\"+f.getName());
+//         while ((s = in.readLine()) != null) {
+//             sb.append(s);
+//         }
+         sb.append(s);
     	String[] tokenizedTerms;
     	if(lang == ENGLISH){                	
-        	tokenizedTerms = sb.toString().replaceAll("[\\W&&[^\\s]]+", "").split("\\W+");   //to get individual terms
+//        	tokenizedTerms = sb.toString().replaceAll("[\\W&&[^\\s]]+", "\\s").split("\\s+");   //to get individual terms
+    		tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\-\n\t\\(\\)0-9]"," ").trim().split("\\s+");
         }
         else{
-        	tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\?p\\[\\]\\(\\)\\-]","").split("\\s+");   //to get individual terms
+        	tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\-]","").split("\\s+");   //to get individual terms
         }      
 		return tokenizedTerms;
 	}
@@ -107,17 +109,15 @@ public class DocumentParser {
     	}
     }
 
-	public Double[][] parseQuery(String queryPath, String lang) throws IOException {
-		File[] allfiles = new File(queryPath).listFiles();    //List all queries    
-        BufferedReader in = null;
+	public Double[][] parseQuery(String queryPath, String lang) throws Exception {
+		File[] allfiles = new File(queryPath).listFiles();    //List all queries            
         String[] tokenizedTerms;
         Double[] tfidfQueryVector = null;
         Double[][] tfidfQueryVectors = null;        
         List<Double[]> tfidfQVectors = new ArrayList<Double[]>();
         for (File f : allfiles) {
-            if (f.getName().endsWith(".txt")) {            	
-                in = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
-                tokenizedTerms = tokenize(in,lang); //Builds a vector for the document by tokenizing it's words.
+            if (f.getName().endsWith(".txt")) {            	                
+                tokenizedTerms = tokenize(f,lang); //Builds a vector for the document by tokenizing it's words.
                 queryVector = tokenizedTerms;
                 tfidfQueryVector = getTFIDFVector(queryVector);
                 tfidfQVectors.add(tfidfQueryVector);

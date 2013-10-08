@@ -30,7 +30,6 @@ public class TagParser{
 	
 	   NodeList nodes = (NodeList) result;
 	
-	   System.out.println(nodes.getLength());
 	   for (int i = 0; i < nodes.getLength(); i++) {
 	       parsedText = nodes.item(i).getNodeValue(); 
 	   }

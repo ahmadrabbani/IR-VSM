@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import classes.*;
@@ -27,16 +28,20 @@ public class DocumentParser {
     private Double tfidfDocumentVector[][];
     
     private String queryVector[];
+    
+    private int corpusSize = 0;
         
     public void parseFiles(String filePath, String lang) throws Exception {
         File[] allfiles = new File(filePath).listFiles();
+        corpusSize = allfiles.length;
+        int fileParseCount = 0;
         lang = lang.toLowerCase();
         BufferedReader in = null;
         String[] tokenizedTerms;
         for (File f : allfiles) {
-            if (f.getName().endsWith(".utf8")) {
+            if (f.getName().endsWith(".utf8")&&!(f.getName().contains("index"))) {
             	
-                tokenizedTerms = tokenize(f,lang);      
+                tokenizedTerms = tokenize(f,lang,"d");      
                 
                 for (String term:tokenizedTerms) {
                     if (!allTerms.contains(term)) {  //avoid duplicate entry
@@ -44,19 +49,46 @@ public class DocumentParser {
                     }
                 }
                 termsDocsArray.add(tokenizedTerms);
+                System.out.println("Total documents parsed: "+(++fileParseCount));
             }
         }                
         
         arrayOfTermDocumentVectors =  termsDocsArray.toArray(new Object[termsDocsArray.size()]);                
         vocabulary = new String [allTerms.size()];
-        vocabulary = (String[]) allTerms.toArray(vocabulary);               
+        System.out.println("Building Vocabulary");
+        vocabulary = (String[]) allTerms.toArray(vocabulary);
+        System.out.println("Vocabulary built");
+        
     }
+    
+    public Double[][] parseQuery(String queryPath, String lang) throws Exception {
+		File[] allfiles = new File(queryPath).listFiles();    //List all queries            
+        String[] tokenizedTerms;
+        Double[] tfidfQueryVector = null;
+        Double[][] tfidfQueryVectors = null;        
+        List<Double[]> tfidfQVectors = new ArrayList<Double[]>();
+        for (File f : allfiles) {
+            if (f.getName().endsWith(".utf8")) {            	                
+                tokenizedTerms = tokenize(f,lang,"q"); //Builds a vector for the document by tokenizing it's words.
+                queryVector = tokenizedTerms;
+                tfidfQueryVector = getTFIDFVector(queryVector);
+                tfidfQVectors.add(tfidfQueryVector);
+            }
+        }        	
+		tfidfQueryVectors = (Double[][]) tfidfQVectors.toArray(new Double[tfidfQVectors.size()][vocabulary.length]);
+		return tfidfQueryVectors;
+	}
 
-    public String[] tokenize(File f, String lang) throws Exception {
+    public String[] tokenize(File f, String lang, String typeOfDoc) throws Exception {
     	 BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
     	 StringBuilder sb = new StringBuilder();
          String s = null;
-         s = TagParser.parse("dataset\\"+f.getName());
+         if(typeOfDoc =="d"){
+        	 s = TagParser.parse("dataset\\"+f.getName());
+         }
+         else{
+        	 s = TagParser.parse("query\\"+f.getName());
+         }
 //         while ((s = in.readLine()) != null) {
 //             sb.append(s);
 //         }
@@ -64,7 +96,7 @@ public class DocumentParser {
     	String[] tokenizedTerms;
     	if(lang == ENGLISH){                	
 //        	tokenizedTerms = sb.toString().replaceAll("[\\W&&[^\\s]]+", "\\s").split("\\s+");   //to get individual terms
-    		tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\-\n\t\\(\\)0-9]"," ").trim().split("\\s+");
+    		tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\-\n\t\\(\\)0-9\\?]+"," ").trim().split("\\s+");
         }
         else{
         	tokenizedTerms = sb.toString().replaceAll("[\"\'\\.,\"\':;<>\\-]","").split("\\s+");   //to get individual terms
@@ -74,13 +106,15 @@ public class DocumentParser {
 
 	@SuppressWarnings("unchecked")
 	public void buildTFIDForCorpus() {        
+		int docVectorCount = 0;
         Double[] tfidfvector = new Double[allTerms.size()];
         String[] unfilteredTDStringArray;
         for (Object unfilteredTermDocumentVector:arrayOfTermDocumentVectors) {
             tfidfvector = new Double[allTerms.size()];
             unfilteredTDStringArray = (String[]) unfilteredTermDocumentVector;
             tfidfvector = getTFIDFVector(unfilteredTDStringArray);
-            tfidfDocsVector.add(tfidfvector);  //storing document vectors;            
+            tfidfDocsVector.add(tfidfvector);  //storing document vectors;
+            System.out.println("Total document tfidf vectors created: "+(++docVectorCount)+"/"+corpusSize);
         }        
         tfidfDocumentVector = (Double[][]) tfidfDocsVector.toArray(new Double[tfidfDocsVector.size()][tfidfvector.length]);        
     }
@@ -99,32 +133,22 @@ public class DocumentParser {
 		    count++;
 		}
 		return tfidfvector;
-	}
-    
-    public void getCosineSimilarity(Double tfidfQueryVectors[][]) {
-    	for(int i = 0; i<tfidfQueryVectors.length; i ++){
-		    for (int j = 0; j < tfidfDocsVector.size(); j++) {            	
-		    	System.out.println("between query and " + j + "  =  "+ CosineSimilarity.cosineSimilarity(tfidfQueryVectors[i],tfidfDocumentVector[j]));            		
-		    }             
-    	}
-    }
-
-	public Double[][] parseQuery(String queryPath, String lang) throws Exception {
-		File[] allfiles = new File(queryPath).listFiles();    //List all queries            
-        String[] tokenizedTerms;
-        Double[] tfidfQueryVector = null;
-        Double[][] tfidfQueryVectors = null;        
-        List<Double[]> tfidfQVectors = new ArrayList<Double[]>();
-        for (File f : allfiles) {
-            if (f.getName().endsWith(".txt")) {            	                
-                tokenizedTerms = tokenize(f,lang); //Builds a vector for the document by tokenizing it's words.
-                queryVector = tokenizedTerms;
-                tfidfQueryVector = getTFIDFVector(queryVector);
-                tfidfQVectors.add(tfidfQueryVector);
-            }
-        }        	
-		tfidfQueryVectors = (Double[][]) tfidfQVectors.toArray(new Double[tfidfQVectors.size()][vocabulary.length]);
-		return tfidfQueryVectors;
-	}
+	}       
+	
+	 public void getCosineSimilarity(Double tfidfQueryVectors[][]) {	    	
+	    	DocumentScore docScores[] = new DocumentScore[corpusSize];
+	    	for(int i = 0; i<tfidfQueryVectors.length; i ++){
+			    for (int j = 0; j < tfidfDocsVector.size(); j++) {          
+			    	docScores[j] = new DocumentScore();
+			    	docScores[j].score = CosineSimilarity.cosineSimilarity(tfidfQueryVectors[i],tfidfDocumentVector[j]);
+			    	docScores[j].documentID = j;
+			    	
+			    }             
+	    	}
+	    	Arrays.sort(docScores);
+	    	for(DocumentScore ds:docScores ){
+	    		System.out.println("Relevance of Doc "+ds.documentID+" = "+ds.score);
+	    	}
+	    }
 }
         

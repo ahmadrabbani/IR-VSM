@@ -17,8 +17,8 @@ public class TfIdf {
               
         //Returns length normalized tf weight
         tf_normalized = count / allTermsInDocument.length;
-        return tf_normalized;
-//        return 1+(Math.log(tf_normalized)/Math.log(10));
+//        return tf_normalized;
+        return (Math.log(1+tf_normalized)/Math.log(10));
     }
     //
     

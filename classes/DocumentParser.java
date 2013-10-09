@@ -30,17 +30,22 @@ public class DocumentParser {
     private String queryVector[];
     
     private int corpusSize = 0;
-        
+    int fileParseCount = 0;
+    
+    DocumentScore docScores[];
+    String[] fileNames;
+    
     public void parseFiles(String filePath, String lang) throws Exception {
         File[] allfiles = new File(filePath).listFiles();
         corpusSize = allfiles.length;
-        int fileParseCount = 0;
+        
         lang = lang.toLowerCase();
         BufferedReader in = null;
         String[] tokenizedTerms;
+        List fileNames = new ArrayList<String>();
+        
         for (File f : allfiles) {
-            if (f.getName().endsWith(".utf8")&&!(f.getName().contains("index"))) {
-            	
+            if (f.getName().endsWith(".utf8")&&!(f.getName().contains("index"))) {            	
                 tokenizedTerms = tokenize(f,lang,"d");      
                 
                 for (String term:tokenizedTerms) {
@@ -49,15 +54,19 @@ public class DocumentParser {
                     }
                 }
                 termsDocsArray.add(tokenizedTerms);
+                fileNames.add(f.getName());
                 System.out.println("Total documents parsed: "+(++fileParseCount));
             }
-        }                
-        
+        }                        
         arrayOfTermDocumentVectors =  termsDocsArray.toArray(new Object[termsDocsArray.size()]);                
         vocabulary = new String [allTerms.size()];
         System.out.println("Building Vocabulary");
         vocabulary = (String[]) allTerms.toArray(vocabulary);
         System.out.println("Vocabulary built");
+        
+        docScores = new DocumentScore[fileParseCount];       
+        this.fileNames = new String[fileParseCount];
+        this.fileNames = (String[]) fileNames.toArray(this.fileNames);
         
     }
     
@@ -135,20 +144,18 @@ public class DocumentParser {
 		return tfidfvector;
 	}       
 	
-	 public void getCosineSimilarity(Double tfidfQueryVectors[][]) {	    	
-	    	DocumentScore docScores[] = new DocumentScore[corpusSize];
+	 public void getCosineSimilarity(Double tfidfQueryVectors[][]) {
+		 	Library library;
+	    	
 	    	for(int i = 0; i<tfidfQueryVectors.length; i ++){
-			    for (int j = 0; j < tfidfDocsVector.size(); j++) {          
-			    	docScores[j] = new DocumentScore();
-			    	docScores[j].score = CosineSimilarity.cosineSimilarity(tfidfQueryVectors[i],tfidfDocumentVector[j]);
-			    	docScores[j].documentID = j;
-			    	
+			    for (int j = 0; j < tfidfDocsVector.size(); j++) {          			    	
+			    	double cosineScore = CosineSimilarity.cosineSimilarity(tfidfQueryVectors[i],tfidfDocumentVector[j]);
+			    	docScores[j] = new DocumentScore(this.fileNames[j],j,cosineScore);			    	
 			    }             
 	    	}
-	    	Arrays.sort(docScores);
-	    	for(DocumentScore ds:docScores ){
-	    		System.out.println("Relevance of Doc "+ds.documentID+" = "+ds.score);
-	    	}
+	    	library = new Library(docScores);
+	    	library.sortDescScore();
+	    	System.out.println(Arrays.toString(library.getDocuments()));
 	    }
 }
         

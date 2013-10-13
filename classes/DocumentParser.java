@@ -33,10 +33,14 @@ public class DocumentParser {
     public Double queryVectors[][];
     
     public int corpusSize = 0;
-    public int fileParseCount = 0;        
+    public static int fileParseCount = 0;        
     public String[] fileNames;
-    public static DocumentScore documentScores[];
-    public File queryFiles[];
+    public static DocumentScore documentScores[][];
+    public static int documentsScored = 0;
+    public static File queryFiles[];
+    public static String ext = ".txt";
+    public static String tag = "content";
+    public static int queryCount = 0;
     
 	@SuppressWarnings("unchecked")
     public void parseFiles(String filePath, String lang) throws Exception {
@@ -48,7 +52,7 @@ public class DocumentParser {
         List fileNames = new ArrayList<String>();
         
         for (File f : allfiles) {
-            if (f.getName().endsWith(".utf8")&&!(f.getName().contains("index"))) {            	
+            if (f.getName().endsWith(ext)&&!(f.getName().contains("index"))) {            	
                 tokenizedTerms = tokenize(f,lang,"d");      
                 
                 for (String term:tokenizedTerms) {
@@ -73,20 +77,22 @@ public class DocumentParser {
     }
     
     public Double[][] parseQuery(String queryPath, String lang) throws Exception {
-		File[] allfiles = new File(queryPath).listFiles();    //List all queries  
+		File[] allfiles = new File(queryPath).listFiles();    //List all queries 		
 		queryFiles = allfiles;
         String[] tokenizedTerms;
         Double[] tfidfQueryVector = null;
         Double[][] tfidfQueryVectors = null;        
         List<Double[]> tfidfQVectors = new ArrayList<Double[]>();
         for (File f : allfiles) {
-            if (f.getName().endsWith(".utf8")) {            	                
+            if (f.getName().endsWith(ext)) {            	                
                 tokenizedTerms = tokenize(f,lang,"q"); //Builds a vector for the document by tokenizing it's words.
                 queryVector = tokenizedTerms;
                 tfidfQueryVector = getTFIDFVector(queryVector);
                 tfidfQVectors.add(tfidfQueryVector);
             }
+            System.out.println("Building query tfidf vector "+(++queryCount));
         }        	
+//        documentScores = new DocumentScore[queryCount][];
 		tfidfQueryVectors = (Double[][]) tfidfQVectors.toArray(new Double[tfidfQVectors.size()][vocabulary.length]);
 		return tfidfQueryVectors;
 	}
@@ -96,10 +102,10 @@ public class DocumentParser {
     	 StringBuilder sb = new StringBuilder();
          String s = null;
          if(typeOfDoc =="d"){//for document
-        	 s = TagParser.parse(f,"TEXT");
+        	 s = TagParser.parse(f,tag);
          }
          else{
-        	 s = TagParser.parse(f,"TEXT");
+        	 s = TagParser.parse(f,tag);
          }        
     	String[] tokenizedTerms;
     	if(lang == ENGLISH){                	
@@ -142,19 +148,22 @@ public class DocumentParser {
 		return tfidfvector;
 	}       	
 	
-	public void output() throws IOException{
+	public static void output() throws IOException{
 		File runFile = new File("results\\run-tfid.txt");
 		String results="";
 		runFile.createNewFile();
-		for(File queryFile:queryFiles){
-			for(int rank = 0; rank < DocumentScore.size; rank++){
-				results += queryFile.getName()+" Q0 "+documentScores[rank].fileName+" "+(rank+1)+" "+documentScores[rank].score+"\n";												
+		File queryFile;
+		for(int i=0; i<queryFiles.length; i++){
+			queryFile = queryFiles[i];
+			for(int rank = 0; rank < Math.min(DocumentParser.fileParseCount,100); rank++){
+				results += queryFile.getName()+" Q0 "+documentScores[i][rank].fileName+" "+(rank+1)+" "+documentScores[i][rank].score+"\n";												
 			}
 		}
 		FileWriter fw = new FileWriter(runFile.getAbsoluteFile());
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(results);
 		bw.close();
+		System.out.println(results);
 	}
 }
         

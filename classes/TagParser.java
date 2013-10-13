@@ -1,38 +1,14 @@
 package classes;
 
 import java.io.File;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 public class TagParser{
-	public static String parse(String filePath) throws Exception {	   
-	   DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	   factory.setNamespaceAware(false); // never forget this!
-	   DocumentBuilder builder = factory.newDocumentBuilder();
-	   String parsedText = null;
-	
-	   Document doc = builder.parse(filePath);
-	
-	   XPathFactory xPathFactory = XPathFactory.newInstance();
-	   XPath xpath = xPathFactory.newXPath();
-	
-	   XPathExpression xPathExpression = xpath.compile("//TEXT/text()");
-	
-	   Object result = xPathExpression.evaluate(doc, XPathConstants.NODESET);		  
-	
-	   NodeList nodes = (NodeList) result;
-	
-	   for (int i = 0; i < nodes.getLength(); i++) {
-	       parsedText = nodes.item(i).getNodeValue(); 
-	   }
-	   return parsedText;
+	public static String parse(File input,String tag) throws Exception {	    
+		String parsedText = "";		
+		Document doc = Jsoup.parse(input, "UTF-8");
+		parsedText = doc.select(tag).text();
+		return parsedText;
 	}
 }

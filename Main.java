@@ -22,5 +22,6 @@ public class Main {
         dp.buildTFIDForCorpus(); //calculates tfidf        
         dp.queryVectors = dp.parseQuery(queryPath, lang);
         Score.cosineSimilarity(dp.queryVectors, dp.tfidfDocumentVector, dp.fileNames, dp.fileParseCount);  
+        dp.output();
     }
 }

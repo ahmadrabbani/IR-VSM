@@ -33,6 +33,8 @@ public class DocumentParser {
     public int corpusSize = 0;
     public int fileParseCount = 0;        
     public String[] fileNames;
+    public static DocumentScore documentScores[];
+    public File queryFiles[];
     
 	@SuppressWarnings("unchecked")
     public void parseFiles(String filePath, String lang) throws Exception {
@@ -69,7 +71,8 @@ public class DocumentParser {
     }
     
     public Double[][] parseQuery(String queryPath, String lang) throws Exception {
-		File[] allfiles = new File(queryPath).listFiles();    //List all queries            
+		File[] allfiles = new File(queryPath).listFiles();    //List all queries  
+		queryFiles = allfiles;
         String[] tokenizedTerms;
         Double[] tfidfQueryVector = null;
         Double[][] tfidfQueryVectors = null;        
@@ -136,5 +139,14 @@ public class DocumentParser {
 		}
 		return tfidfvector;
 	}       	
+	
+	public void output(){
+		for(File queryFile:queryFiles){
+			for(int rank = 0; rank < DocumentScore.size; rank++){
+				System.out.println(queryFile.getName()+" Q0 "+documentScores[rank].fileName+" "+(rank+1)+" "+documentScores[rank].score);
+			}
+		}
+		
+	}
 }
         

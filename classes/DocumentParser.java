@@ -1,10 +1,12 @@
 package classes;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -140,13 +142,19 @@ public class DocumentParser {
 		return tfidfvector;
 	}       	
 	
-	public void output(){
+	public void output() throws IOException{
+		File runFile = new File("results\\run-tfid.run");
+		String results="";
+		runFile.createNewFile();
 		for(File queryFile:queryFiles){
 			for(int rank = 0; rank < DocumentScore.size; rank++){
-				System.out.println(queryFile.getName()+" Q0 "+documentScores[rank].fileName+" "+(rank+1)+" "+documentScores[rank].score);
+				results += queryFile.getName()+" Q0 "+documentScores[rank].fileName+" "+(rank+1)+" "+documentScores[rank].score+"\n";												
 			}
 		}
-		
+		FileWriter fw = new FileWriter(runFile.getAbsoluteFile());
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(results);
+		bw.close();
 	}
 }
         

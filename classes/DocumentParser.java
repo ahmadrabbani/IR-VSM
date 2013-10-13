@@ -143,7 +143,7 @@ public class DocumentParser {
 	}       	
 	
 	public void output() throws IOException{
-		File runFile = new File("results\\run-tfid.run");
+		File runFile = new File("results\\run-tfid.txt");
 		String results="";
 		runFile.createNewFile();
 		for(File queryFile:queryFiles){

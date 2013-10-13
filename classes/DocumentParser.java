@@ -56,7 +56,7 @@ public class DocumentParser {
                 tokenizedTerms = tokenize(f,lang,"d");      
                 
                 for (String term:tokenizedTerms) {
-                    if (!allTerms.contains(term)) {  //avoid duplicate entry
+                    if (!allTerms.contains(term) && !StopWords.hindi.contains(term)) {  //avoid duplicate entry
                         allTerms.add(term);
                     }
                 }
@@ -98,21 +98,14 @@ public class DocumentParser {
 	}
 
     public String[] tokenize(File f, String lang, String typeOfDoc) throws Exception {
-    	 BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f),"UTF-8"));
-    	 StringBuilder sb = new StringBuilder();
-         String s = null;
-         if(typeOfDoc =="d"){//for document
-        	 s = TagParser.parse(f,tag);
-         }
-         else{
-        	 s = TagParser.parse(f,tag);
-         }        
+        String s = null;
+        s = TagParser.parse(f,tag);                 
     	String[] tokenizedTerms;
     	if(lang == ENGLISH){                	
     		tokenizedTerms = s.replaceAll("[\"\'\\.,\"\':;<>\\-\n\t\\(\\)0-9\\?]+"," ").trim().split("\\s+");
         }
         else{
-        	tokenizedTerms = s.replaceAll("[\"\'\\.,\"\':;<>\\-]","").split("\\s+");   //to get individual terms
+        	tokenizedTerms = s.replaceAll("[\"\'\\.,\"\':;<>\\-\n\t\\(\\)0-9\\?]+"," ").trim().split("\\s+");
         }      
 		return tokenizedTerms;
 	}

@@ -71,6 +71,17 @@ public class DocumentParser {
         vocabulary = (String[]) allTerms.toArray(vocabulary);
         System.out.println("Vocabulary built");
                 
+        File vocabFile = new File("vocabulary\\vocab.txt");
+		String vocab="";
+		vocabFile.createNewFile();
+		for(String word:vocabulary){
+			vocab += word+"\n";
+		}
+		FileWriter fw = new FileWriter(vocabFile.getAbsoluteFile());
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(vocab);
+		bw.close();
+        
         this.fileNames = new String[fileParseCount];
         this.fileNames = (String[]) fileNames.toArray(this.fileNames);
         

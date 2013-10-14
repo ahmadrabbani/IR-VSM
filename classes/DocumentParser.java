@@ -5,10 +5,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,14 +73,11 @@ public class DocumentParser {
         vocabulary = (String[]) allTerms.toArray(vocabulary);
         System.out.println("Vocabulary built");
                 
-        File vocabFile = new File("vocabulary\\vocab.txt");
 		String vocab="";
-		vocabFile.createNewFile();
 		for(String word:vocabulary){
 			vocab += word+"\n";
 		}
-		FileWriter fw = new FileWriter(vocabFile.getAbsoluteFile());
-		BufferedWriter bw = new BufferedWriter(fw);
+		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("vocabulary\\vocab.txt"),"UTF-8"));
 		bw.write(vocab);
 		bw.close();
         
